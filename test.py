@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 
 cx = 2; sx = -2
 cy = 3; sy = 3
@@ -12,3 +13,15 @@ acc = np.array([[1], [1], [1]])
 acc_world = np.matmul(rx,np.matmul(ry,np.matmul(rz, acc)))
 
 print(np.transpose(acc_world))
+
+vel = np.array([[0],[0],[0]])
+vel = vel + acc_world * 1/50
+
+print("vel: ", vel)
+
+traj = deque()
+traj.append(vel)
+traj.append(vel)
+
+# print("traj: ", traj)
+print(np.array(traj)[:,1])

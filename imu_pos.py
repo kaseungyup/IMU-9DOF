@@ -5,6 +5,7 @@ import numpy as np
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import ColorRGBA, String
+from collections import deque
 
 from classes.timer import Timer
 from classes.visualizerclass import VisualizerClass
@@ -45,18 +46,47 @@ if __name__ == '__main__':
     imu = IMUData()
     V = VisualizerClass(name='simple viz',HZ=Hz)
 
+    del_t = 1/Hz
+    vel = np.array([[0], [0], [0]])
+    pos = np.array([[0], [0], [0]])
+    traj = deque()
+    traj.append(pos)
+
     tmr_plot.start()
     while tmr_plot.is_notfinished(): # loop 
         if tmr_plot.do_run(): # plot (HZ)
+            cx = np.cos(imu.roll); sx = np.sin(imu.roll)
+            cy = np.cos(imu.pitch); sy = np.sin(imu.pitch)
+            cz = np.cos(imu.yaw); sz = np.sin(imu.yaw)
+
+            rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
+            ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
+            rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
+
+            acc = np.array([[imu.accx], [imu.accy], [imu.accz]])
+            acc_world = np.matmul(rx,np.matmul(ry,np.matmul(rz, acc))) - np.array(np.array([[0], [0], [9.8067]]))
+            print(np.transpose(acc_world))
+
+            vel = vel + acc_world * del_t
+            pos = pos + vel * del_t
+            traj.append(pos)
+            if len(traj) > 50:
+                traj.popleft()
+            traj_arr = np.array(traj)
 
             V.reset_markers()
+            V.reset_lines()
             
-            print("roll: %.2f, pitch: %.2f, yaw: %.2f"%(imu.roll, imu.pitch, imu.yaw))
-            V.append_marker(x=0,y=0,z=0,frame_id='map',roll=imu.roll,pitch=imu.pitch,yaw=imu.yaw,
+            # print("roll: %.2f, pitch: %.2f, yaw: %.2f"%(imu.roll, imu.pitch, imu.yaw))
+            # print(pos)
+            V.append_marker(x=pos[0],y=pos[1],z=pos[2],frame_id='map',roll=imu.roll,pitch=imu.pitch,yaw=imu.yaw,
                 scale=Vector3(0.2,0.06,0.06),color=ColorRGBA(1.0,0.0,0.0,0.5),marker_type=Marker.ARROW)
-            
+            V.append_line(x_array=traj_arr[:,0],y_array=traj_arr[:,1],z_array=traj_arr[:,2],r=0.01,
+                frame_id='map',color=ColorRGBA(0.0,0.0,1.0,1.0),marker_type=Marker.LINE_STRIP)
             V.publish_markers()
+            V.publish_lines
 
         rospy.sleep(1e-8)
 
     V.delete_markers()
+    V.delete_lines()

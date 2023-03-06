@@ -59,11 +59,11 @@ class VisualizerClass(object):
              self.marker_array.markers.pop(0)
         self.marker_array.markers.append(marker) # append
 
-    def append_line(self,x_array,y_array,z=0.0,r=0.1,frame_id='map',
+    def append_line(self,x_array,y_array,z_array,r=0.1,frame_id='map',
             color=ColorRGBA(0.0,1.0,0.0,0.5),marker_type=Marker.LINE_STRIP):
         marker = Marker(
                 type=marker_type,
-                pose=Pose(Point(x_array[0], y_array[0], z), Quaternion(0, 0, 0, 1)),
+                pose=Pose(Point(x_array[0], y_array[0], z_array[0]), Quaternion(0, 0, 0, 1)),
                 scale=Vector3(r, 0, 0),
                 header=Header(frame_id=frame_id,stamp=rospy.get_rostime()),
                 action=Marker.ADD,
@@ -71,7 +71,7 @@ class VisualizerClass(object):
                 lifetime=rospy.Duration(secs=1/self.HZ)
                 )
         for i in range(1, np.array(x_array).shape[0]):
-            marker.points.append(Point(x_array[i],y_array[i],z))
+            marker.points.append(Point(x_array[i],y_array[i],z_array[i]))
         self.n_line += 1
         if(self.n_line > self.LINES_MAX):
              self.line_array.markers.pop(0)
