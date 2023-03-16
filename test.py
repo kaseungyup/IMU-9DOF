@@ -1,27 +1,54 @@
+import sys, os, rospy
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import numpy as np
-from collections import deque
+import serial
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from std_msgs.msg import String
+from classes.timer import Timer
 
-cx = 2; sx = -2
-cy = 3; sy = 3
-cz = 4; sz = 4
+class IMUData():
+    def __init__(self):
+        self.ax = 0.0
+        self.ay = 0.0
+        self.az = 0.0
+        self.wx = 0.0
+        self.wy = 0.0
+        self.wz = 0.0
+        self.mx = 0.0
+        self.my = 0.0
+        self.mz = 0.0
+        self.init_subscriber()
 
-rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
-ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
-rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
+    def init_subscriber(self):
+        self.topic_sub_imu = "imu_sensor"
+        self.isReady_imu = False
+        self.sub_imu = rospy.Subscriber(self.topic_sub_imu, String, self.callback)
+        while self.isReady_imu is False: rospy.sleep(1e-3)
 
-acc = np.array([[1], [1], [1]])
-acc_world = np.matmul(rx,np.matmul(ry,np.matmul(rz, acc)))
+    def callback(self, data):
+        self.isReady_imu = True
+        array = data.data.split()
+        self.ax = float(array[0])
+        self.ay = float(array[1])
+        self.az = float(array[2])
+        self.wx = float(array[3])
+        self.wy = float(array[4])
+        self.wz = float(array[5])
+        self.mx = float(array[6])
+        self.my = float(array[7])
+        self.mz = float(array[8])
 
-print(np.transpose(acc_world))
 
-vel = np.array([[0],[0],[0]])
-vel = vel + acc_world * 1/50
+def get_accel():
+    imu = IMUData()
+    ax = imu.ax
+    ay = imu.ay
+    az = imu.az
+    return ax,ay,az
+    
+if __name__ == '__main__':
+    rospy.init_node('subscriber', anonymous=True)
 
-print("vel: ", vel)
-
-traj = deque()
-traj.append(vel)
-traj.append(vel)
-
-# print("traj: ", traj)
-print(np.array(traj)[:,1])
+    ax, ay, az = get_accel()
+    print(ax, ay, az)

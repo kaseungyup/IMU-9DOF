@@ -65,10 +65,12 @@ if __name__ == '__main__':
 
             acc = np.array([[imu.accx], [imu.accy], [imu.accz]])
             acc_world = np.matmul(rx,np.matmul(ry,np.matmul(rz, acc))) - np.array(np.array([[0], [0], [9.8067]]))
-            print(np.transpose(acc_world))
+            print("acc_world: ", np.transpose(acc_world))
 
             vel = vel + acc_world * del_t
+            if tmr_plot.tick % 1500 == 0: pos = np.array([[0], [0], [0]])
             pos = pos + vel * del_t
+            # print("pos: ", np.transpose(pos))
             traj.append(pos)
             if len(traj) > 50:
                 traj.popleft()
@@ -84,7 +86,7 @@ if __name__ == '__main__':
             V.append_line(x_array=traj_arr[:,0],y_array=traj_arr[:,1],z_array=traj_arr[:,2],r=0.01,
                 frame_id='map',color=ColorRGBA(0.0,0.0,1.0,1.0),marker_type=Marker.LINE_STRIP)
             V.publish_markers()
-            V.publish_lines
+            V.publish_lines()
 
         rospy.sleep(1e-8)
 

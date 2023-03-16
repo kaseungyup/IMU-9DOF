@@ -1,4 +1,6 @@
 .DS_Store
 __pycache__/
+adafruit_lsm6ds/__pycache__/
 classes/__pycache__/
+mag/MotionCal
 test.py
