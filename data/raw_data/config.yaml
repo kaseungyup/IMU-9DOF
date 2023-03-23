@@ -1,0 +1,4 @@
+imu_topic: "imu_sensor"
+imu_rate: 100
+measure_rate: 100
+sequence_time: 16000
